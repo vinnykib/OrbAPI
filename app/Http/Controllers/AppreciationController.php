@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Appreciation;
 use App\Http\Resources\AppreciationResource;
 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class AppreciationController extends Controller
 {
@@ -18,6 +20,10 @@ class AppreciationController extends Controller
 
     public function store(Request $request)
     {
+        $photos = $request->file('photo');
+        $extension = $photos->getClientOriginalExtension();
+        Storage::disk('public')->put($photos->getFilename().'.'.$extension,  File::get($photos));
+
     	  $appreciation = $request->isMethod('put') ? Appreciation::findOrFail($request->id) : new Appreciation;
 	     
 	      $appreciation->id = $request->input('id');
@@ -25,13 +31,9 @@ class AppreciationController extends Controller
 	      $appreciation->details = $request->input('details');
 	      //$appreciation->photo = $request->input('photo');
 
-          if ($request->hasFile('photo')) {
-            $photo = $request->file('photo');
-            $destinationPath = public_path('/images');
-            $imagePath = $destinationPath. "/".  $photoname;
-            $photo->move($destinationPath, $photoname);
-            $appreciation->photo = $photoname;
-          }
+          $appreciation->photo = $photos->getFilename().'.'.$extension;
+
+          
 	      
 	      if($appreciation->save()) {
 
